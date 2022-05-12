@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
 import { Task } from "src/database/entities/task.entity";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { TaskFiltersDto } from "./dto/task-filters.dto";
@@ -8,6 +9,7 @@ import { CheckIdPipe } from "./pipes/check_id.pipe";
 import { TasksService } from "./tasks.service";
 
 @Controller('tasks')
+@UseGuards(AuthGuard())
 export class TasksController {
     constructor(private taskService: TasksService) { }
 
