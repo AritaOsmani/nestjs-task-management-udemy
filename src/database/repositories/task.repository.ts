@@ -11,8 +11,9 @@ import { Task } from "../entities/task.entity";
 export class TaskRepository {
     constructor(@InjectModel(Task.name) private taskModel: Model<Task>) { }
 
-    async createTask(createTaskItem: CreateTaskDto): Promise<Task> {
-        const newTask = new this.taskModel(createTaskItem)
+    async createTask(createTaskItem: CreateTaskDto, userId: string): Promise<Task> {
+        const { title, description } = createTaskItem
+        const newTask = new this.taskModel({ title, description, user: userId })
         return await newTask.save()
     }
 
@@ -31,23 +32,24 @@ export class TaskRepository {
         return await this.taskModel.find()
     }
 
-    async getById(id: string): Promise<Task> {
-        return await this.taskModel.findById({ _id: id })
+    async getById(id: string, userId: string): Promise<Task> {
+        return await this.taskModel.findOne({ $and: [{ _id: id }, { user: userId }] })
     }
 
-    async delete(taskId: string): Promise<Task> {
-        await this.taskModel.deleteOne({ _id: taskId })
-        return await this.getById(taskId)
+    async delete(taskId: string, userId: string): Promise<Task> {
+        await this.taskModel.deleteOne({ _id: taskId, user: userId })
+        return await this.getById(taskId, userId)
     }
 
-    async updateStatus(taskId: string, statusDto: UpdateStatusDto): Promise<Task> {
-        const updated = await this.taskModel.updateOne({ _id: taskId }, { $set: { status: statusDto.status } })
-        return await this.getById(taskId)
+    async updateStatus(taskId: string, statusDto: UpdateStatusDto, userId: string): Promise<Task> {
+        const updated = await this.taskModel.updateOne({ _id: taskId, user: userId }, { $set: { status: statusDto.status } })
+        return await this.getById(taskId, userId)
     }
 
     async update(taskId: string, updateTask: UpdateTaskDto): Promise<Task> {
-        const found = await this.getById(taskId)
+        // const found = await this.getById(taskId)
+        const found = await this.taskModel.findById(taskId)
         const updated = await this.taskModel.updateOne({ _id: taskId }, { $set: { title: updateTask.title, description: updateTask.description } })
-        return await this.getById(taskId)
+        return await this.taskModel.findById(taskId)
     }
 }

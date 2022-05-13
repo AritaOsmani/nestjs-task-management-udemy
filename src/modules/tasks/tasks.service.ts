@@ -6,11 +6,13 @@ import { TaskFiltersDto } from "./dto/task-filters.dto";
 import { TaskRepository } from "src/database/repositories/task.repository";
 import { Task } from "src/database/entities/task.entity";
 import { UpdateTaskDto } from "./dto/update-task.dto";
+import { use } from "passport";
+import { UserRepository } from "src/database/repositories/user.repository";
 
 @Injectable()
 export class TasksService {
 
-    constructor(private taskRepository: TaskRepository) { }
+    constructor(private taskRepository: TaskRepository, private userRepository: UserRepository) { }
 
 
     async getAllTasks(filterDto: TaskFiltersDto): Promise<Task[]> {
@@ -25,8 +27,8 @@ export class TasksService {
     //     return match
     // }
 
-    async getTaskById(id: string): Promise<Task> {
-        const match = await this.taskRepository.getById(id)
+    async getTaskById(id: string, userId: string): Promise<Task> {
+        const match = await this.taskRepository.getById(id, userId)
         if (match) {
             return match
         } else {
@@ -55,30 +57,41 @@ export class TasksService {
     // }
 
 
-    async createTask(newTask: CreateTaskDto): Promise<Task> {
-        return await this.taskRepository.createTask(newTask)
-    }
-
-    async deleteTask(id: string): Promise<Task> {
-        const match = await this.taskRepository.getById(id)
-        if (match) {
-            return await this.taskRepository.delete(id)
+    async createTask(newTask: CreateTaskDto, userId: string): Promise<Task> {
+        //check if the user with the given id exists:
+        const foundUser = await this.userRepository.getById(userId)
+        if (foundUser) {
+            return await this.taskRepository.createTask(newTask, userId)
         } else {
-            throw new NotFoundException(`Task with given id: ${id} not found!`)
+            throw new NotFoundException('User with given id not found!')
         }
     }
 
-    async updateStatus(taskId: string, status: UpdateStatusDto): Promise<Task> {
-        const match = await this.taskRepository.getById(taskId)
+    async deleteTask(id: string, userId: string): Promise<Task> {
+        const match = await this.taskRepository.getById(id, userId)
+        const user = await this.userRepository.getById(userId)
+        console.log('user: ', user)
+        console.log('match: ', match)
         if (match) {
-            return await this.taskRepository.updateStatus(taskId, status)
+
+            return await this.taskRepository.delete(id, userId)
         } else {
-            throw new NotFoundException(`Task with given id: ${taskId} not found!`)
+            throw new NotFoundException(`Task with given id: ${id} not found or user id provided is wrong`)
         }
     }
 
-    async updateTask(taskId: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-        const match = await this.taskRepository.getById(taskId)
+    async updateStatus(taskId: string, status: UpdateStatusDto, userId: string): Promise<Task> {
+        const match = await this.taskRepository.getById(taskId, userId)
+        if (match) {
+            return await this.taskRepository.updateStatus(taskId, status, userId)
+        } else {
+            throw new NotFoundException(`Task with given id: ${taskId} not found or user not authorized`)
+        }
+    }
+
+    //*
+    async updateTask(taskId: string, updateTaskDto: UpdateTaskDto, userId): Promise<Task> {
+        const match = await this.taskRepository.getById(taskId, userId)
         if (match) {
             if (updateTaskDto.title && match.title === updateTaskDto.title) {
                 throw new ConflictException('This task title is already in use')

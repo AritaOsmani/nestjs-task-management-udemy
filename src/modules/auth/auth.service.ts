@@ -23,6 +23,7 @@ export class AuthService {
         const user = await this.userRepository.getByUsername(username)
         if (user && (await bcrypt.compare(password, user.password))) {
             const payload: JwtPayload = { username }
+            console.log('payload inside signin: ', payload)
             const accessToken: string = await this.jwtService.sign(payload)
             return { accessToken }
         } else {

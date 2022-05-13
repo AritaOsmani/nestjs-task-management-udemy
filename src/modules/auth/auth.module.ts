@@ -21,6 +21,6 @@ import { JwtStrategy } from "./jwt.strategy";
     ],
     providers: [AuthService, UserRepository, JwtStrategy],
     controllers: [AuthController],
-    exports: [JwtStrategy, PassportModule]
+    exports: [JwtStrategy, PassportModule, UserRepository]
 })
 export class AuthModule { }

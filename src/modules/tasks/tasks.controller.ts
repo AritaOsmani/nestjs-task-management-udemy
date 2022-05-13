@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Task } from "src/database/entities/task.entity";
 import { CreateTaskDto } from "./dto/create-task.dto";
@@ -31,29 +31,30 @@ export class TasksController {
     }
 
     @Get(':id')
-    async getTaskById(@Param('id', CheckIdPipe) id: string) {
-        return this.taskService.getTaskById(id)
+    async getTaskById(@Param('id', CheckIdPipe) id: string, @Req() req) {
+        console.log('req:', req.user)
+        return this.taskService.getTaskById(id, req.user._id)
     }
 
     @Post()
-    async createTask(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
-        return await this.taskService.createTask(createTaskDto)
+    async createTask(@Body() createTaskDto: CreateTaskDto, @Req() req): Promise<Task> {
+        return await this.taskService.createTask(createTaskDto, req.user._id)
     }
 
     @Delete(':id')
-    async deleteTask(@Param('id', CheckIdPipe) id: string): Promise<Task> {
-        return await this.taskService.deleteTask(id)
+    async deleteTask(@Param('id', CheckIdPipe) id: string, @Req() req): Promise<Task> {
+        return await this.taskService.deleteTask(id, req.user._id)
     }
 
     @Patch('/:id/status')
-    async updateTaskStatus(@Param('id', CheckIdPipe) id: string, @Body() statusInput: UpdateStatusDto): Promise<Task> {
-        return await this.taskService.updateStatus(id, statusInput)
+    async updateTaskStatus(@Param('id', CheckIdPipe) id: string, @Body() statusInput: UpdateStatusDto, @Req() req): Promise<Task> {
+        return await this.taskService.updateStatus(id, statusInput, req.user._id)
     }
 
     @Patch(':id')
-    async updateTask(@Param('id', CheckIdPipe) id: string, @Body() updateTaskDto: UpdateTaskDto): Promise<Task> {
+    async updateTask(@Param('id', CheckIdPipe) id: string, @Body() updateTaskDto: UpdateTaskDto, @Req() req): Promise<Task> {
         console.log(updateTaskDto)
-        return await this.taskService.updateTask(id, updateTaskDto)
+        return await this.taskService.updateTask(id, updateTaskDto, req.user._id)
     }
 
 }
